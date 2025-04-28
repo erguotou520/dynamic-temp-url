@@ -1,0 +1,19 @@
+{
+  "name": "dynamic-temp-url",
+  "version": "0.0.1",
+  "author": {
+    "name": "erguotou520",
+    "email": "erguotou525@gmail.com"
+  },
+  "module": "index.ts",
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "type": "module",
+  "scripts": {
+    "build": "bun build index.ts --outfile index.js"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.2.10"
+  }
+}
