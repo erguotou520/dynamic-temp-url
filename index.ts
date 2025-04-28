@@ -1,4 +1,5 @@
 const routeMapCache = new Map<string, string>()
+const routeTimers = new Map<string, NodeJS.Timeout>()
 
 // 日志工具函数
 const logger = (() => {
@@ -15,10 +16,26 @@ const logger = (() => {
   }
 })()
 
+// 删除路由的辅助函数
+const deleteRoute = (path: string, manual = true) => {
+  routeMapCache.delete(path)
+  const timer = routeTimers.get(path)
+  if (timer) {
+    clearTimeout(timer)
+    routeTimers.delete(path)
+  }
+  logger.info('路由已删除', { path, manual })
+}
+
 const server = Bun.serve({
   port: process.env.PORT || 3000,
   hostname: "0.0.0.0",
   routes: {
+    '/_health': {
+      GET: () => {
+        return new Response('ok')
+      }
+    },
     '/_manage': {
       GET: () => {
         logger.info('访问管理页面')
@@ -32,14 +49,30 @@ const server = Bun.serve({
       },
       POST: async (req) => {
         const body = await req.json()
-        logger.info('添加新路由', { path: body.path })
-        routeMapCache.set(body.path, body.response)
+        const path = body.path
+        const response = body.response
+        const ttl = body.ttl || 600 // 默认10分钟（600秒）
+
+        // 如果路由已存在，先清除旧的定时器
+        if (routeMapCache.has(path)) {
+          deleteRoute(path, false)
+        }
+
+        // 设置新路由
+        routeMapCache.set(path, response)
+        logger.info('添加新路由', { path, ttl })
+
+        // 设置自动删除定时器
+        const timer = setTimeout(() => {
+          deleteRoute(path, false)
+        }, ttl * 1000)
+        routeTimers.set(path, timer)
+
         return new Response(JSON.stringify({ success: true }))
       },
       DELETE: async (req) => {
         const body = await req.json()
-        logger.info('删除路由', { path: body.path })
-        routeMapCache.delete(body.path)
+        deleteRoute(body.path, true)
         return new Response(JSON.stringify({ success: true }))
       }
     }

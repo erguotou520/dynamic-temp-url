@@ -2,14 +2,17 @@ name: Publish Docker image
 permissions: {}
 on:
   push:
-    branches: [ "main" ]
-    paths:
-      - Dockerfile
-      - index.ts
-      - bun.lockb
-      - package.json
-      - index.html
-      - .github/workflows/build-server.yml
+    tags:
+      - v*
+  # push:
+  #   branches: [ "main" ]
+  #   paths:
+  #     - Dockerfile
+  #     - index.ts
+  #     - bun.lockb
+  #     - package.json
+  #     - index.html
+  #     - .github/workflows/build-server.yml
 
 jobs:
   push_to_registry:
